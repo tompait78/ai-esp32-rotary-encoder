@@ -14,7 +14,7 @@
 #define AIESP32ROTARYENCODER_DEFAULT_A_PIN 25
 #define AIESP32ROTARYENCODER_DEFAULT_B_PIN 26
 #define AIESP32ROTARYENCODER_DEFAULT_BUT_PIN 15
-#define AIESP32ROTARYENCODER_DEFAULT_VCC_PIN -1
+#define AIESP32ROTARYENCODER_DEFAULT_VCC_PIN 0
 #define AIESP32ROTARYENCODER_DEFAULT_STEPS 2
 
 typedef enum
@@ -40,6 +40,13 @@ private:
 	volatile int8_t lastMovementDirection = 0; //1 right; -1 left
 	volatile unsigned long lastMovementAt = 0;
 	unsigned long rotaryAccelerationCoef = 150;
+
+	int buttonLastState = LOW;  // the previous state from the input pin
+	unsigned long buttonPressedTime  = 0;
+	unsigned long buttonReleasedTime = 0;
+	unsigned long noClickUntil = 0;
+
+	unsigned long buttonTime = 0;
 
 	bool _circleValues = false;
 	bool isEnabled = true;
@@ -67,9 +74,9 @@ public:
 	AiEsp32RotaryEncoder(
 		uint8_t encoderAPin = AIESP32ROTARYENCODER_DEFAULT_A_PIN,
 		uint8_t encoderBPin = AIESP32ROTARYENCODER_DEFAULT_B_PIN,
-		uint8_t encoderButtonPin = AIESP32ROTARYENCODER_DEFAULT_BUT_PIN,
-		uint8_t encoderVccPin = AIESP32ROTARYENCODER_DEFAULT_VCC_PIN,
-		uint8_t encoderSteps = AIESP32ROTARYENCODER_DEFAULT_STEPS);
+		uint8_t encoderButtonPin = AIESP32ROTARYENCODER_DEFAULT_BUT_PIN);
+	void setVccPin(uint8_t vccPin);
+	void setSteps(long steps = 1);
 	void setBoundaries(long minValue = -100, long maxValue = 100, bool circleValues = false);
 #if defined(ESP8266)
 	ICACHE_RAM_ATTR void readEncoder_ISR();
@@ -95,7 +102,8 @@ public:
 	void setAcceleration(unsigned long acceleration) { this->rotaryAccelerationCoef = acceleration; }
 	void disableAcceleration() { setAcceleration(0); }
 
+	long checkEncoderButtonClicked(unsigned long minWaitMilliseconds = 500);
 	bool isEncoderButtonClicked(unsigned long maximumWaitMilliseconds = 300);
-	bool isEncoderButtonDown();
+	int isEncoderButtonDown();
 };
 #endif
